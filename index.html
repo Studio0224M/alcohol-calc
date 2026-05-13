@@ -11,7 +11,6 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // サービスワーカーの登録スクリプトを追加
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
@@ -44,14 +43,13 @@
             height: 200px;
             overflow-y: scroll;
             scroll-snap-type: y mandatory;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE 10+ */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
         .custom-picker::-webkit-scrollbar {
-            display: none; /* Webkit */
+            display: none;
         }
         
-        /* 中央のハイライト線 */
         .picker-highlight {
             position: absolute;
             top: 50%;
@@ -66,7 +64,7 @@
         }
 
         .picker-list {
-            padding: 80px 0; /* 上下の余白で中央に合わせる */
+            padding: 80px 0;
         }
 
         .picker-item {
@@ -110,7 +108,6 @@
         }
         .btn-quick:active { background: #eff6ff; transform: translateY(1px); }
 
-        /* アシストボタン専用スタイル */
         .btn-assist-95 {
             background: #f0fdf4;
             border: 1px solid #bbf7d0;
@@ -182,19 +179,8 @@
                 </div>
             </div>
 
-            <!-- 液温ジャンプボタン -->
-            <div>
-                <p class="label-title text-center">液温ジャンプ</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="scrollToVal('temp', 30.0)" class="btn-quick">30.0</button>
-                    <button onclick="scrollToVal('temp', 20.0)" class="btn-quick">20.0</button>
-                    <button onclick="scrollToVal('temp', 10.0)" class="btn-quick">10.0</button>
-                    <button onclick="scrollToVal('temp', 0.0)" class="btn-quick">0.0</button>
-                </div>
-            </div>
-
-            <!-- 表読値表示 -->
-            <div class="flex flex-col items-center mt-2">
+            <!-- 表読値表示（上に移動） -->
+            <div class="flex flex-col items-center py-4 bg-gray-50 rounded-lg">
                 <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">表読値</p>
                 <p id="table-val-display" class="text-3xl font-bold text-gray-700 mt-1">--.-</p>
             </div>
@@ -215,7 +201,6 @@
 </div>
 
 <script>
-    // データ定義
     const conversionData = {
         0.0: {89:92.6, 90:93.6, 91:94.5, 92:95.3, 93:96.2, 94:97.1, 95:98.0, 96:98.8, 97:99.7},
         0.5: {89:92.5, 90:93.5, 91:94.4, 92:95.2, 93:96.1, 94:97.0, 95:97.9, 96:98.7, 97:99.6},
@@ -334,27 +319,41 @@
 
     function setupScrollSync(id, key) {
         const el = document.getElementById(id);
-        el.addEventListener('scroll', () => {
-            const items = el.querySelectorAll('.picker-item');
-            const center = el.scrollTop + 100;
-            let closest = null;
-            let minDiff = Infinity;
+        let isScrolling;
 
-            items.forEach(item => {
-                const diff = Math.abs(item.offsetTop + 20 - center);
-                if(diff < minDiff) {
-                    minDiff = diff;
-                    closest = item;
+        el.addEventListener('scroll', () => {
+            window.requestAnimationFrame(() => {
+                const items = el.querySelectorAll('.picker-item');
+                const center = el.scrollTop + 100;
+                let closest = null;
+                let minDiff = Infinity;
+
+                items.forEach(item => {
+                    const diff = Math.abs(item.offsetTop + 20 - center);
+                    if(diff < minDiff) {
+                        minDiff = diff;
+                        closest = item;
+                    }
+                });
+
+                if(closest && !closest.classList.contains('selected')) {
+                    items.forEach(i => i.classList.remove('selected'));
+                    closest.classList.add('selected');
                 }
-                item.classList.remove('selected');
             });
 
-            if(closest) {
-                closest.classList.add('selected');
-                state[key] = parseFloat(closest.dataset.value);
-                calculate();
-            }
-        });
+            window.clearTimeout(isScrolling);
+            isScrolling = setTimeout(() => {
+                const selected = el.querySelector(`#${id} .selected`);
+                if (selected) {
+                    const newVal = parseFloat(selected.dataset.value);
+                    if (state[key] !== newVal) {
+                        state[key] = newVal;
+                        calculate();
+                    }
+                }
+            }, 60); // 60msの静止で値を確定
+        }, { passive: true });
     }
 
     function scrollToVal(type, val, behavior = 'smooth') {
@@ -373,7 +372,8 @@
         let bestTemp = state.temp;
         let minDiff = Infinity;
         
-        const targetValues = targetBase === 95 ? [95.2, 95.3, 95.4] : [99.9, 100.0];
+        // 95ボタンなら95.3、99ボタンなら99.9をターゲットに設定
+        const targetValues = targetBase === 95 ? [95.3] : [99.9];
 
         Object.keys(conversionData).forEach(tempKey => {
             const tempVal = parseFloat(tempKey);
@@ -414,6 +414,7 @@
             resEl.innerText = displayResult;
 
             const numResult = parseFloat(displayResult);
+            // 判定ロジックも修正に合わせて最適化
             const targetValues = [99.9, 100.0, 95.2, 95.3, 95.4];
             
             if (targetValues.includes(numResult)) {
@@ -436,4 +437,3 @@
 
 </body>
 </html>
-
