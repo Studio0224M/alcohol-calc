@@ -59,6 +59,16 @@
             touch-action: pan-y; /* ピッカー部分のみ縦スクロールを許可 */
         }
 
+        /* カスタムピッカーのスタイル */
+        .custom-picker {
+            position: relative;
+            width: 110px;
+            height: 200px;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
         .custom-picker::-webkit-scrollbar {
             display: none;
         }
@@ -158,20 +168,9 @@
         <div id="result-display" class="result-box bg-gray-100">--.-</div>
     </div>
 
-    <!-- ピッカーセクション (左右入れ替え：左が酒度、右が液温) -->
+    <!-- ピッカーセクション -->
     <div class="flex justify-around mb-8">
-        <!-- 酒度ピッカー (左側) -->
-        <div class="flex flex-col items-center">
-            <span class="text-xs text-gray-400 mb-2 font-bold tracking-widest text-center">酒度</span>
-            <div class="relative">
-                <div class="picker-highlight"></div>
-                <div id="degree-picker" class="custom-picker">
-                    <div id="degree-list" class="picker-list"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 液温ピッカー (右側) -->
+        <!-- 液温ピッカー -->
         <div class="flex flex-col items-center">
             <span class="text-xs text-gray-400 mb-2 font-bold tracking-widest text-center">液温 (℃)</span>
             <div class="relative">
@@ -181,23 +180,22 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- クイックボタン & 表読値エリア (左右入れ替え：左が酒度ジャンプ、右が液温関連) -->
-    <div class="grid grid-cols-2 gap-6 px-4">
-        <!-- 左側：酒度関連 -->
-        <div>
-            <p class="label-title text-center">酒度ジャンプ</p>
-            <div class="grid grid-cols-2 gap-2">
-                <button onclick="scrollToVal('degree', 100.0)" class="btn-quick">100</button>
-                <button onclick="scrollToVal('degree', 98.0)" class="btn-quick">98</button>
-                <button onclick="scrollToVal('degree', 96.0)" class="btn-quick">96</button>
-                <button onclick="scrollToVal('degree', 94.0)" class="btn-quick">94</button>
-                <button onclick="scrollToVal('degree', 92.0)" class="btn-quick">92</button>
+        <!-- 酒度ピッカー -->
+        <div class="flex flex-col items-center">
+            <span class="text-xs text-gray-400 mb-2 font-bold tracking-widest text-center">酒度</span>
+            <div class="relative">
+                <div class="picker-highlight"></div>
+                <div id="degree-picker" class="custom-picker">
+                    <div id="degree-list" class="picker-list"></div>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- 右側：液温関連 -->
+    <!-- クイックボタン & 表読値エリア -->
+    <div class="grid grid-cols-2 gap-6 px-4">
+        <!-- 左側：液温関連 -->
         <div class="flex flex-col gap-6">
             <!-- アシストボタン -->
             <div>
@@ -208,10 +206,22 @@
                 </div>
             </div>
 
-            <!-- 表読値表示 -->
+            <!-- 表読値表示（上に移動） -->
             <div class="flex flex-col items-center py-4 bg-gray-50 rounded-lg">
                 <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">表読値</p>
                 <p id="table-val-display" class="text-xl font-bold text-gray-700 mt-1">--.-</p>
+            </div>
+        </div>
+        
+        <!-- 右側：酒度関連 -->
+        <div>
+            <p class="label-title text-center">酒度ジャンプ</p>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="scrollToVal('degree', 100.0)" class="btn-quick">100</button>
+                <button onclick="scrollToVal('degree', 98.0)" class="btn-quick">98</button>
+                <button onclick="scrollToVal('degree', 96.0)" class="btn-quick">96</button>
+                <button onclick="scrollToVal('degree', 94.0)" class="btn-quick">94</button>
+                <button onclick="scrollToVal('degree', 92.0)" class="btn-quick">92</button>
             </div>
         </div>
     </div>
@@ -431,7 +441,7 @@
             resEl.innerText = displayResult;
 
             const numResult = parseFloat(displayResult);
-            // 判定ロジック
+            // 判定ロジックも修正に合わせて最適化
             const targetValues = [99.9, 100.0, 95.2, 95.3, 95.4];
             
             if (targetValues.includes(numResult)) {
